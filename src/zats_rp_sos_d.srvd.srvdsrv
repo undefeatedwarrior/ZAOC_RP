@@ -1,0 +1,4 @@
+@EndUserText.label: 'Service defination for Sales Order Model'
+define service ZATS_RP_SOS_D {
+  expose ZC_ATS_RP_SALES_ANA;
+}

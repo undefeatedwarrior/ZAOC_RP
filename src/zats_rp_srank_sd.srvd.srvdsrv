@@ -1,0 +1,4 @@
+@EndUserText.label: 'SD Sales Rank'
+define service ZATS_RP_SRANK_SD {
+  expose ZC_ATS_RP_SALES_RANK as SalesRankSet;
+}
