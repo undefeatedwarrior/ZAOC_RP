@@ -13,6 +13,8 @@ define view entity ZATS_RP_BOOKING
   -- Association to Parent
   association        to parent ZATS_RP_TRAVEL    as _Travel        on  $projection.TravelId = _Travel.TravelId
 
+  --composition
+  composition [0..*] of ZATS_RP_BOOKSUPPL        as _BookingSupp
 
 
   --Association
@@ -43,5 +45,6 @@ define view entity ZATS_RP_BOOKING
       _Carrier,
       _Connection,
       _BookingStatus,
-      _Travel
+      _Travel,
+      _BookingSupp
 }
