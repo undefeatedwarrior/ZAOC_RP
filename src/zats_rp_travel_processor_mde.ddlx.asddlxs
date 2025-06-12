@@ -1,0 +1,48 @@
+@Metadata.layer: #CUSTOMER
+@UI.headerInfo: {
+    typeName: 'Travel',
+    typeNamePlural: 'Travels'
+    }
+
+annotate entity ZATS_RP_TRAVEL_PROCESSOR with
+{
+
+  @UI.selectionField: [{ position: 10 }]
+  @UI.lineItem: [{ position: 10 }]
+  TravelId;
+
+  @UI.selectionField: [{ position: 20 }]
+  @UI.lineItem: [{ position: 20 }]
+  AgencyId;
+
+  @UI.selectionField: [{ position: 30 }]
+  @UI.lineItem: [{ position: 30 }]
+  CustomerId;
+
+  @UI.lineItem: [{ position: 40 }]
+  BeginDate;
+  //  EndDate;
+  //  BookingFee;
+
+  @UI.selectionField: [{ position: 40 }]
+  @UI.lineItem: [{ position: 50 }]
+  TotalPrice;
+
+  //  @UI.lineItem: [{ position: 60 }]
+  //  CurrencyCode;
+  //  Description;
+
+  @UI.selectionField: [{ position: 50 }]
+  @UI.lineItem: [{ position: 70 ,
+                   criticality: 'Criticality' ,
+                   importance: #HIGH }]
+  overallstatus;
+
+  //  StatusText;
+  //  Criticality;
+
+  //  CreatedBy;
+  //  CreatedAt;
+  //  LastChangedBy;
+  //  LastChangedAt;
+}
