@@ -18,9 +18,9 @@ define view entity ZATS_RP_BOOKING_PROCESSOR
       LastChangedAt,
       /* Associations */
       _BookingStatus,
-      _BookingSupp,
+      _BookingSupp : redirected to composition child ZATS_RP_BOOKSUPPL_PROCESSOR,
       _Carrier,
       _Connection,
       _Customer,
-      _Travel: redirected to parent ZATS_RP_TRAVEL_PROCESSOR
+      _Travel      : redirected to parent ZATS_RP_TRAVEL_PROCESSOR
 }

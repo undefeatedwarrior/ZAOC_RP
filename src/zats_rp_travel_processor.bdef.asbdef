@@ -1,0 +1,29 @@
+projection;
+strict ( 2 );
+
+define behavior for ZATS_RP_TRAVEL_PROCESSOR alias Travel
+{
+  use create;
+  use update;
+  use delete;
+
+  use association _Booking { create; }
+}
+
+define behavior for ZATS_RP_BOOKING_PROCESSOR alias Booking
+{
+  use update;
+  use delete;
+
+  use association _Travel;
+//  use association _BookingSupp { create; }
+}
+
+//define behavior for ZATS_RP_BOOKSUPPL_PROCESSOR alias BookingSuppl
+//{
+//  use update;
+//  use delete;
+//
+//  use association _Travel;
+//  use association _Booking;
+//}

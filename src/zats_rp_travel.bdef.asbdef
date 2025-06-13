@@ -1,0 +1,47 @@
+managed implementation in class zbp_ats_rp_travel unique;
+strict ( 2 );
+
+//Root Entity
+define behavior for ZATS_RP_TRAVEL alias Travle
+persistent table /dmo/travel_m
+lock master
+authorization master ( instance )
+etag master LastChangedAt
+{
+  create ( authorization : global );
+  update;
+  delete;
+//  field ( readonly ) TravelId;
+  association _Booking { create; }
+}
+
+
+
+//Child for Travel
+define behavior for ZATS_RP_BOOKING alias Booking
+persistent table /dmo/booking_m
+lock dependent by _Travel
+authorization dependent by _Travel
+etag master LastChangedAt
+{
+  update;
+  delete;
+  field ( readonly ) TravelId, BookingId;
+  association _Travel;
+  association _BookingSupp { create; }
+}
+
+
+//Child for Booking
+define behavior for ZATS_RP_BOOKSUPPL alias BookSuppl
+persistent table /dmo/booksuppl_m
+lock dependent by _Travel
+authorization dependent by _Travel
+etag master LastChangedAt
+{
+  update;
+  delete;
+  field ( readonly ) TravelId, BookingId, BookingSupplementId;
+  association _Travel;
+  association _Booking;
+}

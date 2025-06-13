@@ -47,7 +47,7 @@ define root view entity ZATS_RP_TRAVEL_PROCESSOR
       Criticality,
       /* Associations */
       _Agency,
-      _Booking,
+      _Booking: redirected to composition child ZATS_RP_BOOKING_PROCESSOR,
       _Currency,
       _Customer,
       _OverallStatus
