@@ -18,7 +18,7 @@ define root view entity ZATS_RP_TRAVEL_PROCESSOR
 
       @ObjectModel.text.element: [ 'CustomerName' ]
       @Consumption.valueHelpDefinition: [{ entity.name: '/DMO/I_Customer' ,
-                                           entity.element: 'CustomerId'
+                                           entity.element: 'CustomerID'
                                            }]                                         //Value Help
       CustomerId,
       @Semantics.text: true
@@ -28,6 +28,9 @@ define root view entity ZATS_RP_TRAVEL_PROCESSOR
       EndDate,
       BookingFee,
       TotalPrice,
+
+      @Consumption.valueHelpDefinition: [{ entity.name: 'I_Currency' ,
+                                           entity.element: 'Currency'} ]
       CurrencyCode,
       @Semantics.text: true
       Description,
@@ -47,7 +50,7 @@ define root view entity ZATS_RP_TRAVEL_PROCESSOR
       Criticality,
       /* Associations */
       _Agency,
-      _Booking: redirected to composition child ZATS_RP_BOOKING_PROCESSOR,
+      _Booking : redirected to composition child ZATS_RP_BOOKING_PROCESSOR,
       _Currency,
       _Customer,
       _OverallStatus
