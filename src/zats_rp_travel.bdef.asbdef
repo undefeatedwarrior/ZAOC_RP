@@ -16,7 +16,7 @@ etag master LastChangedAt
 
   mapping for /dmo/travel_m
     {
-      TravelId      = travel_id;
+      TravelId      = travel_id;    //key
       AgencyId      = agency_id;
       CustomerId    = customer_id;
       BeginDate     = begin_date;
@@ -51,8 +51,8 @@ etag master LastChangedAt
 
   mapping for /dmo/booking_m
     {
-      TravelId      = travel_id;
-      BookingId     = booking_id;
+      TravelId      = travel_id;    //key
+      BookingId     = booking_id;    //key
       BookingDate   = booking_date;
       CustomerId    = customer_id;
       CarrierId     = carrier_id;
@@ -82,9 +82,9 @@ etag master LastChangedAt
 
   mapping for /dmo/booksuppl_m
     {
-      TravelId            = travel_id;
-      BookingId           = booking_id;
-      BookingSupplementId = booking_supplement_id;
+      TravelId            = travel_id;                //key
+      BookingId           = booking_id;               //key
+      BookingSupplementId = booking_supplement_id;   //key
       SupplementId        = supplement_id;
       Price               = price;
       CurrencyCode        = currency_code;
