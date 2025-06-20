@@ -8,7 +8,7 @@ CLASS zcl_ats_rp_eml DEFINITION
 
     INTERFACES if_oo_adt_classrun .
 
-    DATA: lv_opr TYPE c VALUE 'D'.
+    DATA: lv_opr TYPE c VALUE 'R'.
 
 
 
@@ -31,8 +31,8 @@ CLASS zcl_ats_rp_eml IMPLEMENTATION.
 
         READ ENTITIES OF zats_rp_travel
         ENTITY Travle
-*        ALL FIELDS WITH
-        FIELDS ( travelid agencyid CustomerId OverallStatus )
+        ALL FIELDS
+*        FIELDS ( travelid agencyid CustomerId OverallStatus )
         WITH VALUE #( ( TravelId = '00000010')
                       ( TravelId = '00000026')
                       ( TravelId = '009595' )
@@ -62,7 +62,8 @@ CLASS zcl_ats_rp_eml IMPLEMENTATION.
         MODIFY ENTITIES OF zats_rp_travel
         ENTITY Travle
         CREATE FIELDS ( TravelId AgencyId CurrencyCode BeginDate EndDate Description overallstatus )
-        WITH VALUE #( ( TravelId = '09876543'
+        WITH VALUE #( ( %cid = 'ABCDEF'
+                        TravelId = '09876543'
                         AgencyId = lv_agency
                         CurrencyCode = lv_customer
                         BeginDate = cl_abap_context_info=>get_system_date( )
@@ -70,7 +71,8 @@ CLASS zcl_ats_rp_eml IMPLEMENTATION.
                         Description = lv_description
                         overallstatus = 'P'
                         )
-                        ( TravelId = '00001135'
+                        ( %cid = 'ABCDEF1'
+                        TravelId = '00001135'
                         AgencyId = lv_agency
                         CurrencyCode = lv_customer
                         BeginDate = cl_abap_context_info=>get_system_date( )
@@ -78,7 +80,8 @@ CLASS zcl_ats_rp_eml IMPLEMENTATION.
                         Description = lv_description
                         overallstatus = 'P'
                         )
-                        ( TravelId = '00000010'
+                        ( %cid = 'ABCDEF2'
+                        TravelId = '00000010'
                         AgencyId = lv_agency
                         CurrencyCode = lv_customer
                         BeginDate = cl_abap_context_info=>get_system_date( )
@@ -103,6 +106,10 @@ CLASS zcl_ats_rp_eml IMPLEMENTATION.
             data   = lt_reported_i
         ).
 
+        out->write(
+          EXPORTING
+            data   = lt_fail_i
+        ).
 
       WHEN 'U'.
 
@@ -165,9 +172,7 @@ CLASS zcl_ats_rp_eml IMPLEMENTATION.
 
     ENDCASE.
 
-
-
-
   ENDMETHOD.
+
 
 ENDCLASS.
