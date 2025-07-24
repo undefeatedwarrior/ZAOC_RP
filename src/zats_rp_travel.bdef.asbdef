@@ -1,12 +1,17 @@
-managed implementation in class zbp_ats_rp_travel unique;
+managed;
 strict ( 2 );
 
 //Root Entity
 define behavior for ZATS_RP_TRAVEL alias Travle
+
+// Make behavour pool for travel entity
+implementation in class zbp_ats_rp_travel unique
+
 persistent table /dmo/travel_m
 lock master
 authorization master ( instance )
 etag master LastChangedAt
+early numbering
 {
   create ( authorization : global );
   update;
@@ -37,10 +42,15 @@ etag master LastChangedAt
 
 //Child for Travel
 define behavior for ZATS_RP_BOOKING alias Booking
+
+// Make behavour pool for booking entity
+implementation in class zbp_ats_rp_booking unique
+
 persistent table /dmo/booking_m
 lock dependent by _Travel
 authorization dependent by _Travel
 etag master LastChangedAt
+early numbering
 {
   update;
   delete;
@@ -68,10 +78,16 @@ etag master LastChangedAt
 
 //Child for Booking
 define behavior for ZATS_RP_BOOKSUPPL alias BookSuppl
+
+// Make behavour pool for booking suppliment entity
+implementation in class zbp_ats_rp_BookSuppl unique
+
+
 persistent table /dmo/booksuppl_m
 lock dependent by _Travel
 authorization dependent by _Travel
 etag master LastChangedAt
+early numbering
 {
   update;
   delete;

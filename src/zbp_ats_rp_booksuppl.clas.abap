@@ -1,0 +1,5 @@
+CLASS zbp_ats_rp_booksuppl DEFINITION PUBLIC ABSTRACT FINAL FOR BEHAVIOR OF zats_rp_travel.
+ENDCLASS.
+
+CLASS zbp_ats_rp_booksuppl IMPLEMENTATION.
+ENDCLASS.
