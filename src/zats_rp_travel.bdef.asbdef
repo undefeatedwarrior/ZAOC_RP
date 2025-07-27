@@ -16,7 +16,7 @@ early numbering
   create ( authorization : global );
   update;
   delete;
-  //  field ( readonly ) TravelId;
+  //field ( readonly ) TravelId;
   association _Booking { create; }
 
   mapping for /dmo/travel_m
