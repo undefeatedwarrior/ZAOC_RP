@@ -147,35 +147,54 @@ CLASS lhc_Travle IMPLEMENTATION.
 
     "" Loop at unique travel id
     LOOP AT entities ASSIGNING FIELD-SYMBOL(<travel_group>) GROUP BY <travel_group>-TravelId.
+
       ""Step 2: get the highest booking number which is already there
       LOOP AT bookings INTO DATA(ls_booking) USING KEY entity
-          WHERE source-TravelId = <travel_group>-TravelId.
+                                             WHERE source-TravelId = <travel_group>-TravelId.
+
         IF max_booking_id < ls_booking-target-BookingId.
           max_booking_id = ls_booking-target-BookingId.
         ENDIF.
+
       ENDLOOP.
-      ""Step 3: get the asigned booking numbers for incoming request
+
+
+      ""Step 3: get the assigned booking numbers for incoming request
+
       LOOP AT entities INTO DATA(ls_entity) USING KEY entity
-          WHERE TravelId = <travel_group>-TravelId.
+                                            WHERE TravelId = <travel_group>-TravelId.
+
         LOOP AT ls_entity-%target INTO DATA(ls_target).
+
           IF max_booking_id < ls_target-BookingId.
             max_booking_id = ls_target-BookingId.
           ENDIF.
+
         ENDLOOP.
+
       ENDLOOP.
+
+
       ""Step 4: loop over all the entities of travel with same travel id
+
       LOOP AT entities ASSIGNING FIELD-SYMBOL(<travel>)
-          USING KEY entity WHERE TravelId = <travel_group>-TravelId.
+                       USING KEY entity WHERE TravelId = <travel_group>-TravelId.
+
         ""Step 5: assign new booking IDs to the booking entity inside each travel
         LOOP AT <travel>-%target ASSIGNING FIELD-SYMBOL(<booking_wo_numbers>).
-          APPEND CORRESPONDING #( <booking_wo_numbers> ) TO mapped-booking
-          ASSIGNING FIELD-SYMBOL(<mapped_booking>).
+                                 APPEND CORRESPONDING #( <booking_wo_numbers> )
+                                 TO mapped-booking
+                                 ASSIGNING FIELD-SYMBOL(<mapped_booking>).
+
           IF <mapped_booking>-BookingId IS INITIAL.
-            max_booking_id += 10.
+            max_booking_id = max_booking_id + 1 .
             <mapped_booking>-BookingId = max_booking_id.
           ENDIF.
+
         ENDLOOP.
+
       ENDLOOP.
+
     ENDLOOP.
 
 
