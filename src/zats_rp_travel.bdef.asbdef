@@ -11,13 +11,24 @@ persistent table /dmo/travel_m
 lock master
 authorization master ( instance )
 etag master LastChangedAt
+
+//Early Numbering
 early numbering
 {
   create ( authorization : global );
   update;
   delete;
-  //field ( readonly ) TravelId;
-  association _Booking { create; }
+
+  //Dynamic Feature Control
+  association _Booking { create(features : instance); }
+
+  //Static Feature control
+  field(readonly) TravelId, CreatedBy, CreatedAt, LastChangedAt, LastChangedBy;
+  field(mandatory) AgencyId, CustomerId, BeginDate, EndDate, overallstatus, BookingFee, CurrencyCode;
+
+
+  //Data action to copy BO data
+  factory action copyTravel[1]; //Data Action - Factory Data (Instance)
 
   mapping for /dmo/travel_m
     {
@@ -50,12 +61,17 @@ persistent table /dmo/booking_m
 lock dependent by _Travel
 authorization dependent by _Travel
 etag master LastChangedAt
+
+//Early Numbering
 early numbering
 {
   update;
   delete;
-  //  field ( readonly ) TravelId, BookingId;
-  field ( readonly ) TravelId;
+
+  //Static Feature control
+  field ( readonly ) TravelId, BookingId;
+  field ( mandatory ) CarrierId, ConnectionId, FlightDate, BookingStatus;
+
   association _Travel;
   association _BookingSupp { create; }
 
@@ -91,8 +107,11 @@ early numbering
 {
   update;
   delete;
-  //  field ( readonly ) TravelId, BookingId, BookingSupplementId;
-  field ( readonly ) TravelId, BookingId;
+
+  //Static Feature control
+  field ( readonly ) TravelId, BookingId, BookingSupplementId;
+  field ( mandatory ) Price, SupplementId;
+
   association _Travel;
   association _Booking;
 

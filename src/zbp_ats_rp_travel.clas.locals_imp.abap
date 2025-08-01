@@ -6,6 +6,10 @@ CLASS lhc_Travle DEFINITION INHERITING FROM cl_abap_behavior_handler.
 
     METHODS get_global_authorizations FOR GLOBAL AUTHORIZATION
       IMPORTING REQUEST requested_authorizations FOR Travle RESULT result.
+    METHODS copyTravel FOR MODIFY
+      IMPORTING keys FOR ACTION Travle~copyTravel.
+    METHODS get_instance_features FOR INSTANCE FEATURES
+      IMPORTING keys REQUEST requested_features FOR Travle RESULT result.
     METHODS earlynumbering_create FOR NUMBERING
       IMPORTING entities FOR CREATE Travle.
 
@@ -182,9 +186,9 @@ CLASS lhc_Travle IMPLEMENTATION.
 
         ""Step 5: assign new booking IDs to the booking entity inside each travel
         LOOP AT <travel>-%target ASSIGNING FIELD-SYMBOL(<booking_wo_numbers>).
-                                 APPEND CORRESPONDING #( <booking_wo_numbers> )
-                                 TO mapped-booking
-                                 ASSIGNING FIELD-SYMBOL(<mapped_booking>).
+          APPEND CORRESPONDING #( <booking_wo_numbers> )
+          TO mapped-booking
+          ASSIGNING FIELD-SYMBOL(<mapped_booking>).
 
           IF <mapped_booking>-BookingId IS INITIAL.
             max_booking_id = max_booking_id + 1 .
@@ -196,6 +200,133 @@ CLASS lhc_Travle IMPLEMENTATION.
       ENDLOOP.
 
     ENDLOOP.
+
+  ENDMETHOD.
+
+
+
+
+  METHOD copyTravel.
+
+    DATA: Travels       TYPE TABLE FOR CREATE zats_rp_travel\\Travle,
+          Bookings_cba  TYPE TABLE FOR CREATE zats_rp_travel\\Travle\_Booking,
+          Booksuppl_cba TYPE TABLE FOR CREATE zats_rp_travel\\Booking\_BookingSupp.
+
+
+    ""Step 1: Remove the travel instances with initial %cid
+    READ TABLE keys WITH KEY %cid = '' INTO DATA(key_with_intial_cid).
+    ASSERT key_with_intial_cid IS INITIAL.
+
+
+    ""Step 2: Read all Travel, Booking & Booking Supplement data using EML
+    READ ENTITIES OF zats_rp_travel IN LOCAL MODE ENTITY Travle
+                                    ALL FIELDS WITH CORRESPONDING #( keys )
+                                    RESULT DATA(travel_read_result)
+                                    FAILED failed.
+
+    READ ENTITIES OF zats_rp_travel IN LOCAL MODE ENTITY Travle BY \_Booking
+                                    ALL FIELDS WITH CORRESPONDING #( travel_read_result )
+                                    RESULT DATA(book_read_result)
+                                    FAILED failed.
+
+    READ ENTITIES OF zats_rp_travel IN LOCAL MODE ENTITY Booking BY \_BookingSupp
+                                    ALL FIELDS WITH CORRESPONDING #( book_read_result )
+                                    RESULT DATA(booksuppl_read_result)
+                                    FAILED failed.
+
+
+
+    LOOP AT travel_read_result ASSIGNING FIELD-SYMBOL(<travel>).
+
+      ""Step 3: Fill Travel internal table for Travel data creation   - %cid
+      APPEND VALUE #(
+                      %cid = keys[ %tky = <travel>-%tky ]-%cid
+                      %data = CORRESPONDING #( <travel> EXCEPT travelId )
+                    )
+                    TO travels ASSIGNING FIELD-SYMBOL(<new_travel>).
+
+      <new_travel>-BeginDate      = cl_abap_context_info=>get_system_date(  ).
+      <new_travel>-EndDate        = cl_abap_context_info=>get_system_date(  ) + 30.
+      <new_travel>-overallstatus  = 'O'.
+
+
+      ""Step 4: Fill Booking internal table for Booking data creation - %cid_ref
+      APPEND VALUE #( %cid_ref = keys[ KEY entity %tky = <travel>-%tky ]-%cid )
+                      TO bookings_cba ASSIGNING FIELD-SYMBOL(<bookings_cba>).
+
+      LOOP AT book_read_result ASSIGNING FIELD-SYMBOL(<booking>) WHERE TravelId = <travel>-TravelId.
+
+        APPEND VALUE #( %cid = keys[ KEY entity %tky = <travel>-%tky ]-%cid && <booking>-BookingId
+                        %data = CORRESPONDING #( book_read_result[ KEY entity %tky = <booking>-%tky ] EXCEPT travelID )
+                      )
+                      TO <bookings_cba>-%target ASSIGNING FIELD-SYMBOL(<new_booking>).
+
+        <new_booking>-BookingStatus = 'N'.
+
+
+        ""Step 5: Fill Booking Supplement internal table for Booking Supplement data creation - %cid_ref
+        APPEND VALUE #( %cid_ref = keys[ KEY entity %tky = <travel>-%tky ]-%cid && <booking>-BookingId )
+                     TO booksuppl_cba ASSIGNING FIELD-SYMBOL(<booksuppl_cba>).
+
+        LOOP AT booksuppl_read_result ASSIGNING FIELD-SYMBOL(<booksuppl>)
+                                      USING KEY entity WHERE TravelId = <travel>-TravelId
+                                                         AND BookingId = <booking>-BookingId.
+
+          APPEND VALUE #( %cid = keys[ KEY entity %tky = <travel>-%tky ]-%cid && <booking>-BookingId && <booksuppl>-BookingSupplementId
+                          %data = CORRESPONDING #(  <booksuppl> EXCEPT travelID bookingID )
+                        )
+                        TO <booksuppl_cba>-%target. "ASSIGNING FIELD-SYMBOL(<new_booksuppl>).
+
+
+        ENDLOOP.
+
+      ENDLOOP.
+
+    ENDLOOP.
+
+
+    ""Step 6: Modify Entity using EML to create new BO instance using existing data
+    MODIFY ENTITIES OF zats_rp_travel IN LOCAL MODE
+
+        ENTITY Travle
+            CREATE FIELDS ( AgencyId CustomerId BeginDate EndDate TotalPrice CurrencyCode ) WITH travels
+            CREATE BY \_Booking  FIELDS ( BookingId BookingDate CustomerId CarrierId ConnectionId FlightPrice CurrencyCode BookingStatus ) WITH bookings_cba
+
+        ENTITY Booking
+            CREATE BY \_BookingSupp FIELDS ( BookingSupplementId SupplementId Price CurrencyCode ) WITH booksuppl_cba
+
+        MAPPED DATA(mapped_create).
+
+    mapped-travle = mapped_create-travle.
+
+  ENDMETHOD.
+
+
+
+  METHOD get_instance_features.
+
+    ""Step 1: Read the Travel data with status
+    READ ENTITIES OF zats_rp_travel IN LOCAL MODE ENTITY Travle
+                                    FIELDS ( TravelId overallstatus )
+                                    WITH CORRESPONDING #( keys )
+                                    RESULT DATA(travels)
+                                    FAILED failed.
+
+
+    ""Step 2: Return the result with booking creation possible or not
+    READ TABLE travels INTO DATA(ls_travel) INDEX 1.
+    IF ls_travel-overallstatus = 'X'.
+      DATA(lv_allow) = if_abap_behv=>fc-o-disabled.
+    ELSE.
+      lv_allow = if_abap_behv=>fc-o-enabled.
+    ENDIF.
+
+
+    result = VALUE #( FOR travel IN travels
+                        ( %tky = travel-%tky
+                          %assoc-_Booking = lv_allow
+                        )
+                    ).
 
 
 
