@@ -10,6 +10,11 @@ CLASS lhc_Travle DEFINITION INHERITING FROM cl_abap_behavior_handler.
       IMPORTING keys FOR ACTION Travle~copyTravel.
     METHODS get_instance_features FOR INSTANCE FEATURES
       IMPORTING keys REQUEST requested_features FOR Travle RESULT result.
+    METHODS recalculatetotalprice FOR MODIFY
+      IMPORTING keys FOR ACTION travle~recalculatetotalprice.
+
+    METHODS calculatetotalprice FOR DETERMINE ON MODIFY
+      IMPORTING keys FOR travle~calculatetotalprice.
     METHODS earlynumbering_create FOR NUMBERING
       IMPORTING entities FOR CREATE Travle.
 
@@ -331,5 +336,131 @@ CLASS lhc_Travle IMPLEMENTATION.
 
 
   ENDMETHOD.
+
+
+
+  METHOD reCalculateTotalPrice.
+
+**Define a structure where we can store all the Booking Fees and Currency Code
+
+    TYPES: BEGIN OF ty_amount_per_currency,
+             amount        TYPE /dmo/price,
+             currency_code TYPE /dmo/currency_code,
+           END OF ty_amount_per_currency.
+
+    DATA: amounts_per_currencycode TYPE TABLE OF ty_amount_per_currency.
+
+
+**Read all travel instances and subsequent booking using EML
+
+    "Travel
+    READ ENTITIES OF zats_rp_travel IN LOCAL MODE
+                                    ENTITY Travle
+                                    FIELDS ( BookingFee CurrencyCode )
+                                    WITH CORRESPONDING #( keys )
+                                    RESULT DATA(travels).
+
+    "Booking
+    READ ENTITIES OF zats_rp_travel IN LOCAL MODE
+                                    ENTITY Travle BY \_Booking
+                                    FIELDS ( FlightPrice CurrencyCode )
+                                    WITH CORRESPONDING #( travels )
+                                    RESULT DATA(bookings).
+
+    "Booking suppl
+    READ ENTITIES OF zats_rp_travel IN LOCAL MODE
+                                    ENTITY Booking BY \_BookingSupp
+                                    FIELDS ( Price CurrencyCode )
+                                    WITH CORRESPONDING #( bookings )
+                                    RESULT DATA(bookingsupplements).
+
+
+**Delete the values without any Currency Code
+
+    DELETE travels WHERE CurrencyCode IS INITIAL.
+    DELETE bookings WHERE CurrencyCode IS INITIAL.
+    DELETE bookingsupplements WHERE CurrencyCode IS INITIAL.
+
+    LOOP AT travels ASSIGNING FIELD-SYMBOL(<travel>).
+
+
+      "set the first value for total price by adding the booking fee from header
+      amounts_per_currencycode = VALUE #( ( amount = <travel>-BookingFee
+                                            currency_code = <travel>-CurrencyCode )
+                                        ).
+
+
+      LOOP AT bookings INTO DATA(booking) WHERE TravelId = <travel>-TravelId.
+
+        COLLECT VALUE ty_amount_per_currency( amount = booking-FlightPrice
+                                              currency_code = booking-CurrencyCode )
+                                             INTO amounts_per_currencycode.
+
+      ENDLOOP.
+
+
+      LOOP AT bookingsupplements INTO DATA(bookingsupplement) WHERE TravelId = <travel>-TravelId.
+
+        COLLECT VALUE ty_amount_per_currency( amount = bookingsupplement-Price
+                                              currency_code = bookingsupplement-CurrencyCode )
+                                             INTO amounts_per_currencycode.
+
+      ENDLOOP.
+
+
+**Perform Currency Conversion
+
+      CLEAR <travel>-TotalPrice.
+      LOOP AT amounts_per_currencycode INTO DATA(amount_per_currencycode).
+
+        IF amount_per_currencycode-currency_code = <travel>-CurrencyCode."Same Currency Code as per Header(Travel)
+
+          <travel>-TotalPrice = <travel>-TotalPrice + amount_per_currencycode-amount.
+
+        ELSE.   "Convert Currency as same as header currency
+
+          /dmo/cl_flight_amdp=>convert_currency(
+            EXPORTING
+              iv_amount               = CONV #( amount_per_currencycode-amount )
+              iv_currency_code_source = amount_per_currencycode-currency_code
+              iv_currency_code_target = <travel>-CurrencyCode
+              iv_exchange_rate_date   = cl_abap_context_info=>get_system_date( )
+            IMPORTING
+              ev_amount               = DATA(total_booking_amt)
+          ).
+
+          <travel>-TotalPrice = <travel>-TotalPrice + total_booking_amt.
+
+        ENDIF.
+
+      ENDLOOP.
+
+    ENDLOOP.
+
+
+**Return the total amount in mapped so the RAP will modify this data to DB
+
+    MODIFY ENTITIES OF zats_rp_travel IN LOCAL MODE
+                                      ENTITY Travle
+                                      UPDATE FIELDS ( TotalPrice )
+                                      WITH CORRESPONDING #( travels ).
+
+
+  ENDMETHOD.
+
+
+
+  METHOD calculateTotalPrice."Determination
+
+
+    MODIFY ENTITIES OF zats_rp_travel IN LOCAL MODE
+                                      ENTITY Travle
+                                      EXECUTE reCalculateTotalPrice
+                                      FROM CORRESPONDING #( keys ).
+
+
+  ENDMETHOD.
+
+
 
 ENDCLASS.
