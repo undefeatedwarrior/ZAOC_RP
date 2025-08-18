@@ -1,5 +1,9 @@
 CLASS zbp_ats_rp_travel DEFINITION PUBLIC ABSTRACT FINAL FOR BEHAVIOR OF zats_rp_travel.
+protected section.
+private section.
 ENDCLASS.
 
-CLASS zbp_ats_rp_travel IMPLEMENTATION.
+
+
+CLASS ZBP_ATS_RP_TRAVEL IMPLEMENTATION.
 ENDCLASS.

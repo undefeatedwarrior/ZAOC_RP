@@ -1,3 +1,64 @@
+CLASS lsc_zats_rp_travel DEFINITION INHERITING FROM cl_abap_behavior_saver.
+
+  PROTECTED SECTION.
+
+    METHODS save_modified REDEFINITION.
+
+ENDCLASS.
+
+CLASS lsc_zats_rp_travel IMPLEMENTATION.
+
+  "Additional Save
+  METHOD save_modified.
+
+    DATA: travel_log_update TYPE STANDARD TABLE OF /dmo/log_travel,
+          final_changes     TYPE STANDARD TABLE OF /dmo/log_travel.
+
+    IF update-travle IS NOT INITIAL."If Value update found in Travle BO
+
+      travel_log_update = CORRESPONDING #( update-travle MAPPING travel_id = TravelId ).
+
+      LOOP AT update-travle ASSIGNING FIELD-SYMBOL(<travel_log_update>).
+
+        ASSIGN travel_log_update[ travel_id = <travel_log_update>-TravelId ]
+                                TO FIELD-SYMBOL(<travle_log_db>).
+
+        GET TIME STAMP FIELD <travle_log_db>-created_at.
+
+        IF <travel_log_update>-%control-CustomerId = if_abap_behv=>mk-on.
+
+          <travle_log_db>-change_id = cl_system_uuid=>create_uuid_x16_static( ).
+          <travle_log_db>-changed_field_name = 'Customer'.
+          <travle_log_db>-changed_value = <travel_log_update>-CustomerId.
+          <travle_log_db>-changing_operation = 'Change'.
+
+          APPEND <travle_log_db> TO final_changes.
+
+        ENDIF.
+
+
+        IF <travel_log_update>-%control-AgencyId = if_abap_behv=>mk-on.
+
+          <travle_log_db>-change_id = cl_system_uuid=>create_uuid_x16_static( ).
+          <travle_log_db>-changed_field_name = 'Agency'.
+          <travle_log_db>-changed_value = <travel_log_update>-AgencyId.
+          <travle_log_db>-changing_operation = 'Change'.
+
+          APPEND <travle_log_db> TO final_changes.
+
+        ENDIF.
+
+      ENDLOOP.
+
+      INSERT /dmo/log_travel FROM TABLE @final_changes.
+
+    ENDIF.
+
+  ENDMETHOD.
+
+ENDCLASS.
+
+
 CLASS lhc_Travle DEFINITION INHERITING FROM cl_abap_behavior_handler.
   PRIVATE SECTION.
 
@@ -15,6 +76,8 @@ CLASS lhc_Travle DEFINITION INHERITING FROM cl_abap_behavior_handler.
 
     METHODS calculatetotalprice FOR DETERMINE ON MODIFY
       IMPORTING keys FOR travle~calculatetotalprice.
+    METHODS validateheaderdata FOR VALIDATE ON SAVE
+      IMPORTING keys FOR travle~validateheaderdata.
     METHODS earlynumbering_create FOR NUMBERING
       IMPORTING entities FOR CREATE Travle.
 
@@ -339,7 +402,7 @@ CLASS lhc_Travle IMPLEMENTATION.
 
 
 
-  METHOD reCalculateTotalPrice.
+  METHOD reCalculateTotalPrice."Resuable
 
 **Define a structure where we can store all the Booking Fees and Currency Code
 
@@ -429,6 +492,26 @@ CLASS lhc_Travle IMPLEMENTATION.
               ev_amount               = DATA(total_booking_amt)
           ).
 
+
+
+*****           TRY.
+*****               cl_exchange_rates=>convert_to_foreign_currency(
+*****                 EXPORTING
+*****                   date              = cl_abap_context_info=>get_system_date( )
+*****                   foreign_currency  = <travel>-currencycode
+*****                   local_amount      = CONV #( amount_per_currencycode-amount )
+*****                   local_currency    = amount_per_currencycode-currency_code
+******               rate              = 0
+*****                   rate_type         = 'M'
+******               do_read_tcurr     = abap_true
+*****             IMPORTING
+*****               foreign_amount    = data(total_booking_amt)
+*****               ).
+*****             CATCH cx_exchange_rates.
+*****               "handle exception
+*****           ENDTRY.
+*****
+
           <travel>-TotalPrice = <travel>-TotalPrice + total_booking_amt.
 
         ENDIF.
@@ -453,6 +536,7 @@ CLASS lhc_Travle IMPLEMENTATION.
   METHOD calculateTotalPrice."Determination
 
 
+    "Return the total amount in mapped so the RAP will modify this data to DB
     MODIFY ENTITIES OF zats_rp_travel IN LOCAL MODE
                                       ENTITY Travle
                                       EXECUTE reCalculateTotalPrice
@@ -462,5 +546,71 @@ CLASS lhc_Travle IMPLEMENTATION.
   ENDMETHOD.
 
 
+
+  METHOD validateHeaderData.
+
+    "Step 1: Read Travel Data
+    READ ENTITIES OF zats_rp_travel IN LOCAL MODE
+                     ENTITY Travle
+                     FIELDS ( CustomerId )
+                     WITH CORRESPONDING #( keys )
+                     RESULT DATA(lt_travel).
+
+
+    "Step 2: Declare a sorted table for holding customer ids
+    DATA customers TYPE SORTED TABLE OF /dmo/customer WITH UNIQUE KEY customer_id.
+
+
+    "Step 3: Extract the unique Customer IDs in our table
+    customers = CORRESPONDING #( lt_travel DISCARDING DUPLICATES MAPPING
+                                 customer_id = CustomerId EXCEPT *
+                               ).
+
+    DELETE customers WHERE customer_id IS INITIAL.
+
+    IF customers IS NOT INITIAL.
+
+      "Get the validation done to get all customer ids from db these are the IDs which are present
+      SELECT FROM /dmo/customer  FIELDS customer_id
+                                 FOR ALL ENTRIES IN @customers
+                                 WHERE customer_id = @customers-customer_id
+                                 INTO TABLE @DATA(lt_cust_db).
+
+    ENDIF.
+
+
+    "loop at travel data
+    LOOP AT lt_travel INTO DATA(ls_travel).
+
+      IF ( ls_travel-TravelId IS INITIAL
+           OR NOT line_exists( lt_cust_db[ customer_id = ls_travel-CustomerId ] ) ).
+
+
+        "Inform the RAP to terminate Create
+        APPEND VALUE #( %tky = ls_travel-%tky ) TO failed-travle.
+
+        APPEND VALUE #( %tky = ls_travel-%tky
+                        %element-customerid = if_abap_behv=>mk-on
+                        %msg = NEW /dmo/cm_flight_messages(
+                                 textid       = /dmo/cm_flight_messages=>customer_unkown
+                                 customer_id  = ls_travel-CustomerId
+                                 severity     = if_abap_behv_message=>severity-error
+                                 )
+                      ) TO reported-travle.
+
+
+
+        ""Exercise: Validations
+        "1. check if begin and end date is empty
+        "2. check if the end date is always > begin date
+        "3. begin date of travel should be in future
+
+
+      ENDIF.
+
+    ENDLOOP.
+
+
+  ENDMETHOD.
 
 ENDCLASS.

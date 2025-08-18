@@ -1,4 +1,4 @@
-managed;
+managed implementation in class zbp_ats_rp_travel unique;
 strict ( 2 );
 
 //Root Entity
@@ -11,13 +11,17 @@ persistent table /dmo/travel_m
 lock master
 authorization master ( instance )
 etag master LastChangedAt
-
+with additional save
 //Early Numbering
 early numbering
 {
   create ( authorization : global );
   update;
   delete;
+
+  //Dynamic Feature Control
+  association _Booking { create(features : instance); }
+
 
   //It is piece of code which is intented to be only consumed with in our RAP BO
   internal action reCalculateTotalPrice;
@@ -28,9 +32,10 @@ early numbering
                                                 field BookingFee, CurrencyCode; //on change of field
                                               }
 
-
-  //Dynamic Feature Control
-  association _Booking { create(features : instance); }
+  //Validation - Check custom business rules
+  validation validateHeaderData on save { create;
+                                          field CustomerId, BeginDate, EndDate;
+                                        }
 
 
   //Static Feature control
@@ -81,7 +86,7 @@ early numbering
   delete;
 
   //Static Feature control
-  field ( readonly ) TravelId, BookingId;
+  field ( readonly ) TravelId, BookingId, LastChangedAt;
   field ( mandatory ) CarrierId, ConnectionId, FlightDate, BookingStatus;
 
   association _Travel;
@@ -121,7 +126,7 @@ early numbering
   delete;
 
   //Static Feature control
-  field ( readonly ) TravelId, BookingId, BookingSupplementId;
+  field ( readonly ) TravelId, BookingId, BookingSupplementId, LastChangedAt;
   field ( mandatory ) Price, SupplementId;
 
   association _Travel;

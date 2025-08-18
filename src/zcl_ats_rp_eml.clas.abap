@@ -20,7 +20,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_ats_rp_eml IMPLEMENTATION.
+CLASS ZCL_ATS_RP_EML IMPLEMENTATION.
 
 
   METHOD if_oo_adt_classrun~main.
@@ -173,6 +173,4 @@ CLASS zcl_ats_rp_eml IMPLEMENTATION.
     ENDCASE.
 
   ENDMETHOD.
-
-
 ENDCLASS.

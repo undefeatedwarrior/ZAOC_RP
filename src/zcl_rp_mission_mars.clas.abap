@@ -17,7 +17,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_rp_mission_mars IMPLEMENTATION.
+CLASS ZCL_RP_MISSION_MARS IMPLEMENTATION.
 
 
   METHOD if_oo_adt_classrun~main.
@@ -68,5 +68,4 @@ CLASS zcl_rp_mission_mars IMPLEMENTATION.
 
 
   ENDMETHOD.
-
 ENDCLASS.

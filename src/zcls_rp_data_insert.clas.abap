@@ -18,9 +18,13 @@ ENDCLASS.
 
 
 
+CLASS ZCLS_RP_DATA_INSERT IMPLEMENTATION.
 
 
-CLASS zcls_rp_data_insert IMPLEMENTATION.
+  METHOD if_oo_adt_classrun~main.
+    setdata( ).
+  ENDMETHOD.
+
 
   METHOD setData.
 
@@ -63,10 +67,4 @@ CLASS zcls_rp_data_insert IMPLEMENTATION.
     insert zats_rp_region from table @it_zats_rp_region.
 
   ENDMETHOD.
-
-  METHOD if_oo_adt_classrun~main.
-    setdata( ).
-  ENDMETHOD.
-
 ENDCLASS.
-
