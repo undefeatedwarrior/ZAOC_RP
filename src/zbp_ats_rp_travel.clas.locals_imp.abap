@@ -599,17 +599,80 @@ CLASS lhc_Travle IMPLEMENTATION.
                       ) TO reported-travle.
 
 
+      ENDIF.
 
-        ""Exercise: Validations
-        "1. check if begin and end date is empty
+
+
+      ""Exercise: Validations
+      "1. check if begin and end date is empty
+      IF ls_travel-BeginDate IS INITIAL OR ls_travel-EndDate IS INITIAL.
+
+        APPEND VALUE #( %tky = ls_travel-%tky ) TO failed-travle.
+
+        IF ls_travel-BeginDate IS INITIAL.
+
+          APPEND VALUE #( %tky = ls_travel-%tky
+                          %element-BeginDate = if_abap_behv=>mk-on
+                          %msg = NEW /dmo/cm_flight_messages(
+                                    textid     = /dmo/cm_flight_messages=>enter_begin_date
+                                    begin_date = ls_travel-BeginDate
+                                    severity   = if_abap_behv_message=>severity-error
+                                    )
+                        ) TO reported-travle.
+
+        ENDIF.
+
+        IF ls_travel-EndDate IS INITIAL.
+
+          APPEND VALUE #( %tky = ls_travel-%tky
+                          %element-EndDate = if_abap_behv=>mk-on
+                          %msg = NEW /dmo/cm_flight_messages(
+                                    textid     = /dmo/cm_flight_messages=>enter_end_date
+                                    end_date = ls_travel-EndDate
+                                    severity   = if_abap_behv_message=>severity-error
+                                    )
+                        ) TO reported-travle.
+
+        ENDIF.
+
+
         "2. check if the end date is always > begin date
-        "3. begin date of travel should be in future
+      ELSEIF ls_travel-BeginDate > ls_travel-EndDate.
 
+
+
+        APPEND VALUE #( %tky = ls_travel-%tky ) TO failed-travle.
+
+        APPEND VALUE #( %tky = ls_travel-%tky
+                        %element-EndDate = if_abap_behv=>mk-on
+                        %element-BeginDate = if_abap_behv=>mk-on
+                        %msg = NEW /dmo/cm_flight_messages(
+                                  textid     = /dmo/cm_flight_messages=>begin_date_bef_end_date
+                                  end_date   = ls_travel-EndDate
+                                  begin_date = ls_travel-BeginDate
+                                  severity   = if_abap_behv_message=>severity-error
+                                  )
+                      ) TO reported-travle.
+
+
+
+        "3. begin date of travel should be in future
+      ELSEIF ls_travel-BeginDate < cl_abap_context_info=>get_system_date( ).
+
+        APPEND VALUE #( %tky = ls_travel-%tky ) TO failed-travle.
+
+        APPEND VALUE #( %tky = ls_travel-%tky
+                        %element-BeginDate = if_abap_behv=>mk-on
+                        %msg = NEW /dmo/cm_flight_messages(
+                                  textid     = /dmo/cm_flight_messages=>begin_date_on_or_bef_sysdate
+                                  begin_date = ls_travel-BeginDate
+                                  severity   = if_abap_behv_message=>severity-error
+                                  )
+                      ) TO reported-travle.
 
       ENDIF.
 
     ENDLOOP.
-
 
   ENDMETHOD.
 
