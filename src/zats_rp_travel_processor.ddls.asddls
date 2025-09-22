@@ -40,7 +40,7 @@ define root view entity ZATS_RP_TRAVEL_PROCESSOR
                                            entity.element: 'OverallStatus'
                                            }]                                         //Value Help
       overallstatus,
-
+        
       CreatedBy,
       CreatedAt,
       LastChangedBy,
