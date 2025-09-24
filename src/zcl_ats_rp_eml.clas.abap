@@ -8,7 +8,7 @@ CLASS zcl_ats_rp_eml DEFINITION
 
     INTERFACES if_oo_adt_classrun .
 
-    DATA: lv_opr TYPE c VALUE 'R'.
+    DATA: lv_opr TYPE c VALUE 'D'.
 
 
 
@@ -113,7 +113,7 @@ CLASS ZCL_ATS_RP_EML IMPLEMENTATION.
 
       WHEN 'U'.
 
-        lv_description = 'Updated Record'.
+        lv_description = 'Upd'.
         lv_agency = '070032'.
 
         MODIFY ENTITIES OF zats_rp_travel

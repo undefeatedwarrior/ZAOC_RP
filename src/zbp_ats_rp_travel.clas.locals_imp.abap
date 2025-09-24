@@ -67,24 +67,33 @@ CLASS lhc_Travle DEFINITION INHERITING FROM cl_abap_behavior_handler.
 
     METHODS get_global_authorizations FOR GLOBAL AUTHORIZATION
       IMPORTING REQUEST requested_authorizations FOR Travle RESULT result.
+
     METHODS copyTravel FOR MODIFY
       IMPORTING keys FOR ACTION Travle~copyTravel.
+
     METHODS get_instance_features FOR INSTANCE FEATURES
       IMPORTING keys REQUEST requested_features FOR Travle RESULT result.
+
     METHODS recalculatetotalprice FOR MODIFY
       IMPORTING keys FOR ACTION travle~recalculatetotalprice.
 
     METHODS calculatetotalprice FOR DETERMINE ON MODIFY
       IMPORTING keys FOR travle~calculatetotalprice.
+
     METHODS validateheaderdata FOR VALIDATE ON SAVE
       IMPORTING keys FOR travle~validateheaderdata.
+
+
     METHODS earlynumbering_create FOR NUMBERING
-      IMPORTING entities FOR CREATE Travle.
+      IMPORTING entities FOR CREATE Travle.             "Early Numbering for Travel Root Entity
 
     METHODS earlynumbering_cba_Booking FOR NUMBERING
-      IMPORTING entities FOR CREATE Travle\_Booking.
+      IMPORTING entities FOR CREATE Travle\_Booking.    "Early Numbering for Booking (Child) Entity
 
 ENDCLASS.
+
+
+
 
 CLASS lhc_Travle IMPLEMENTATION.
 
@@ -107,8 +116,9 @@ CLASS lhc_Travle IMPLEMENTATION.
 
     ENDLOOP.
 
+
     DATA(entities_wo_travelid) = entities.
-    DELETE entities_wo_travelid WHERE TravelId IS NOT INITIAL.
+    DELETE entities_wo_travelid WHERE TravelId IS NOT INITIAL. "Get entries for which Travel ID is not maintained
 
 
     "" Step 2: Get the Sequence number from the SNRO
@@ -148,6 +158,9 @@ CLASS lhc_Travle IMPLEMENTATION.
     CASE number_range_returncode.
 
       WHEN '1'.
+
+        "1 - Warning stage reached: Number near the warning limit as per custom defined warning percentage.
+
         "" Step 4: Handle especial cases where number range exceed the critical %
         LOOP AT entities_wo_travelid INTO entity.
 
@@ -162,6 +175,10 @@ CLASS lhc_Travle IMPLEMENTATION.
         ENDLOOP.
 
       WHEN '2' OR '3'.
+
+        "2 - The requested number is the last number in the current interval (number range nearing exhaustion).
+        "3 - Number range interval not found or does not exist.
+
         "" Step 5: The number range return last number , or number exhausted
         LOOP AT entities_wo_travelid INTO entity.
 
@@ -259,7 +276,7 @@ CLASS lhc_Travle IMPLEMENTATION.
           ASSIGNING FIELD-SYMBOL(<mapped_booking>).
 
           IF <mapped_booking>-BookingId IS INITIAL.
-            max_booking_id = max_booking_id + 1 .
+            max_booking_id = max_booking_id + 10 .
             <mapped_booking>-BookingId = max_booking_id.
           ENDIF.
 
@@ -354,14 +371,17 @@ CLASS lhc_Travle IMPLEMENTATION.
 
 
     ""Step 6: Modify Entity using EML to create new BO instance using existing data
-    MODIFY ENTITIES OF zats_rp_travel IN LOCAL MODE
-
+    MODIFY ENTITIES OF zats_rp_travel
+        IN LOCAL MODE
         ENTITY Travle
-            CREATE FIELDS ( AgencyId CustomerId BeginDate EndDate TotalPrice CurrencyCode ) WITH travels
-            CREATE BY \_Booking  FIELDS ( BookingId BookingDate CustomerId CarrierId ConnectionId FlightPrice CurrencyCode BookingStatus ) WITH bookings_cba
-
+        CREATE FIELDS ( AgencyId CustomerId BeginDate EndDate TotalPrice CurrencyCode )
+        WITH travels
+        CREATE BY \_Booking
+        FIELDS ( BookingId BookingDate CustomerId CarrierId ConnectionId FlightPrice CurrencyCode BookingStatus )
+        WITH bookings_cba
         ENTITY Booking
-            CREATE BY \_BookingSupp FIELDS ( BookingSupplementId SupplementId Price CurrencyCode ) WITH booksuppl_cba
+        CREATE BY \_BookingSupp FIELDS ( BookingSupplementId SupplementId Price CurrencyCode )
+        WITH booksuppl_cba
 
         MAPPED DATA(mapped_create).
 

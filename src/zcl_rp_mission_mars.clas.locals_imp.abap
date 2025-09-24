@@ -24,6 +24,9 @@ ENDCLASS.
 
 
 
+
+
+
 CLASS zlcl_planet1 DEFINITION.
 
   PUBLIC SECTION.
@@ -43,6 +46,8 @@ CLASS zlcl_planet1 IMPLEMENTATION.
   ENDMETHOD.
 
 ENDCLASS.
+
+
 
 
 

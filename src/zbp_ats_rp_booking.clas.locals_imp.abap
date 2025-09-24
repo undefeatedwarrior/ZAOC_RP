@@ -3,7 +3,7 @@ CLASS lhc_booking DEFINITION INHERITING FROM cl_abap_behavior_handler.
   PRIVATE SECTION.
 
     METHODS earlynumbering_cba_Bookingsupp FOR NUMBERING
-      IMPORTING entities FOR CREATE Booking\_Bookingsupp.
+      IMPORTING entities FOR CREATE Booking\_Bookingsupp.   "Early Numbering for Booking Suppl (Child) Entity
 
 ENDCLASS.
 

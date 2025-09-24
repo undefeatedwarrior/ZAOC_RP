@@ -20,36 +20,38 @@ early numbering
   delete;
 
   //Dynamic Feature Control
-  association _Booking { create(features : instance); }
+  association _Booking { create ( features : instance ); }
 
 
   //It is piece of code which is intented to be only consumed with in our RAP BO
   internal action reCalculateTotalPrice;
 
 
-  determination calculateTotalPrice on modify {
-                                                create; //On creation of new booking
-                                                field BookingFee, CurrencyCode; //on change of field
-                                              }
+  determination calculateTotalPrice on modify
+  {
+    create; //On creation of new booking
+    field BookingFee, CurrencyCode; //on change of field
+  }
 
   //Validation - Check custom business rules
-  validation validateHeaderData on save { create;
-                                          field CustomerId, BeginDate, EndDate;
-                                        }
+  validation validateHeaderData on save
+  { create;
+    field CustomerId, BeginDate, EndDate;
+  }
 
 
   //Static Feature control
-  field(readonly) TravelId, CreatedBy, CreatedAt, LastChangedAt, LastChangedBy, TotalPrice;
-  field(mandatory) AgencyId, CustomerId, BeginDate, EndDate, overallstatus, BookingFee, CurrencyCode;
+  field ( readonly ) TravelId, CreatedBy, CreatedAt, LastChangedAt, LastChangedBy, TotalPrice;
+  field ( mandatory ) AgencyId, CustomerId, BeginDate, EndDate, overallstatus, BookingFee, CurrencyCode;
 
 
   //Data action to copy BO data
-  factory action copyTravel[1]; //Data Action - Factory Data (Instance)
+  factory action copyTravel [1]; //Data Action - Factory Data (Instance)
 
 
-  mapping for /dmo/travel_m
+  mapping for /dmo/travel_m corresponding
     {
-      TravelId      = travel_id;    //key
+      TravelId      = travel_id; //key
       AgencyId      = agency_id;
       CustomerId    = customer_id;
       BeginDate     = begin_date;
@@ -94,8 +96,8 @@ early numbering
 
   mapping for /dmo/booking_m
     {
-      TravelId      = travel_id;    //key
-      BookingId     = booking_id;    //key
+      TravelId      = travel_id; //key
+      BookingId     = booking_id; //key
       BookingDate   = booking_date;
       CustomerId    = customer_id;
       CarrierId     = carrier_id;
@@ -134,9 +136,9 @@ early numbering
 
   mapping for /dmo/booksuppl_m
     {
-      TravelId            = travel_id;                //key
-      BookingId           = booking_id;               //key
-      BookingSupplementId = booking_supplement_id;   //key
+      TravelId            = travel_id; //key
+      BookingId           = booking_id; //key
+      BookingSupplementId = booking_supplement_id; //key
       SupplementId        = supplement_id;
       Price               = price;
       CurrencyCode        = currency_code;
