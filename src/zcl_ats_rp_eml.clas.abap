@@ -8,7 +8,7 @@ CLASS zcl_ats_rp_eml DEFINITION
 
     INTERFACES if_oo_adt_classrun .
 
-    DATA: lv_opr TYPE c VALUE 'D'.
+    DATA: lv_opr TYPE c VALUE 'O'.
 
 
 
