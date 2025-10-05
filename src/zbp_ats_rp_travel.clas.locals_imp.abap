@@ -373,6 +373,7 @@ CLASS lhc_Travle IMPLEMENTATION.
     ""Step 6: Modify Entity using EML to create new BO instance using existing data
     MODIFY ENTITIES OF zats_rp_travel
         IN LOCAL MODE
+
         ENTITY Travle
         CREATE FIELDS ( AgencyId CustomerId BeginDate EndDate TotalPrice CurrencyCode )
         WITH travels
@@ -382,7 +383,6 @@ CLASS lhc_Travle IMPLEMENTATION.
         ENTITY Booking
         CREATE BY \_BookingSupp FIELDS ( BookingSupplementId SupplementId Price CurrencyCode )
         WITH booksuppl_cba
-
         MAPPED DATA(mapped_create).
 
     mapped-travle = mapped_create-travle.
