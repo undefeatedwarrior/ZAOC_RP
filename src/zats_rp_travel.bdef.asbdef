@@ -48,6 +48,12 @@ early numbering
   //Data action to copy BO data
   factory action copyTravel [1]; //Data Action - Factory Data (Instance)
 
+  //Side Effect
+  side effects
+  {
+    field BookingFee affects field TotalPrice;
+  }
+
 
   mapping for /dmo/travel_m corresponding
     {
