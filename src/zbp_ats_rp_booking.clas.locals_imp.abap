@@ -4,6 +4,8 @@ CLASS lhc_booking DEFINITION INHERITING FROM cl_abap_behavior_handler.
 
     METHODS earlynumbering_cba_Bookingsupp FOR NUMBERING
       IMPORTING entities FOR CREATE Booking\_Bookingsupp.   "Early Numbering for Booking Suppl (Child) Entity
+    METHODS calculateTotalPrice FOR DETERMINE ON MODIFY
+      IMPORTING keys FOR Booking~calculateTotalPrice.
 
 ENDCLASS.
 
@@ -68,6 +70,19 @@ CLASS lhc_booking IMPLEMENTATION.
         ENDLOOP.
       ENDLOOP.
     ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD calculateTotalPrice.   "TO-DO: Have to check - Not triggering on change of price at booking level
+
+    DATA: travel_ids TYPE STANDARD TABLE OF /DMO/I_Travel_M WITH UNIQUE HASHED KEY key COMPONENTS travel_id.
+
+    travel_ids = CORRESPONDING #( keys DISCARDING DUPLICATES MAPPING travel_id = TravelId ).
+
+    MODIFY ENTITIES OF zats_rp_travel IN LOCAL MODE ENTITY Travle
+                                      EXECUTE reCalculateTotalPrice "using reusable method (Internal Action) reCalculateTotalPrice
+                                      FROM CORRESPONDING #( travel_ids ).
 
   ENDMETHOD.
 

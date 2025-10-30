@@ -1,6 +1,9 @@
 managed implementation in class zbp_ats_rp_travel unique;
 strict ( 2 );
 
+//Add draft feature at BO level
+with draft;
+
 //Root Entity
 define behavior for ZATS_RP_TRAVEL alias Travle
 
@@ -9,10 +12,18 @@ implementation in class zbp_ats_rp_travel unique
 
 persistent table /dmo/travel_m
 lock master
+total etag LastChangedAt    // Mandatory to use total etag with lock master when Draft is used
 authorization master ( instance )
+
+//Draft Table for Travel - Will be created by RAP Framework
+//Positioning of Draft table is must be after Lock Master and Authorization Master
+draft table zats_rp_d_travel
+
 etag master LastChangedAt
+
 with additional save
 //Early Numbering
+
 early numbering
 {
   create ( authorization : global );
@@ -20,7 +31,7 @@ early numbering
   delete;
 
   //Dynamic Feature Control
-  association _Booking { create ( features : instance ); }
+  association _Booking { create ( features : instance ); with draft; }
 
 
   //It is piece of code which is intented to be only consumed with in our RAP BO
@@ -48,11 +59,21 @@ early numbering
   //Data action to copy BO data
   factory action copyTravel [1]; //Data Action - Factory Data (Instance)
 
+  determine action validationCustomer { validation validateHeaderData; }
   //Side Effect
   side effects
   {
     field BookingFee affects field TotalPrice;
+    determine action validationCustomer executed on field CustomerId affects messages;
   }
+
+  //Explicit Draft Actions Are Needed in Strinct mode,
+  //becuase RAP will consider actions declaed explicitly in BDEF  rather than relying on implicit framework defaults
+  draft determine action Prepare;
+  draft action Edit;
+  draft action Resume;
+  draft action Activate;
+  draft action Discard;
 
 
   mapping for /dmo/travel_m corresponding
@@ -87,6 +108,9 @@ lock dependent by _Travel
 authorization dependent by _Travel
 etag master LastChangedAt
 
+//Draft Table for Booking
+draft table zats_rp_d_book
+
 //Early Numbering
 early numbering
 {
@@ -97,8 +121,17 @@ early numbering
   field ( readonly ) TravelId, BookingId, LastChangedAt;
   field ( mandatory ) CarrierId, ConnectionId, FlightDate, BookingStatus;
 
-  association _Travel;
-  association _BookingSupp { create; }
+  association _Travel { with draft; }
+  association _BookingSupp { create; with draft; }
+
+
+  //determination for change in booking data
+  determination calculateTotalPrice on modify
+  {
+    create;
+    field FlightPrice, CurrencyCode; //on change of field
+  }
+
 
   mapping for /dmo/booking_m
     {
@@ -128,6 +161,8 @@ persistent table /dmo/booksuppl_m
 lock dependent by _Travel
 authorization dependent by _Travel
 etag master LastChangedAt
+
+draft table zats_rp_d_booksp
 early numbering
 {
   update;
@@ -137,8 +172,8 @@ early numbering
   field ( readonly ) TravelId, BookingId, BookingSupplementId, LastChangedAt;
   field ( mandatory ) Price, SupplementId;
 
-  association _Travel;
-  association _Booking;
+  association _Travel { with draft; }
+  association _Booking { with draft; }
 
   mapping for /dmo/booksuppl_m
     {

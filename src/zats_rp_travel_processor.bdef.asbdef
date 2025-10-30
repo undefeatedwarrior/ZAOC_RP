@@ -1,13 +1,22 @@
 projection;
 strict ( 2 );
-
+use draft;
 define behavior for ZATS_RP_TRAVEL_PROCESSOR alias Travel
 {
   use create;
   use update;
   use delete;
   use action copyTravel;
-  use association _Booking { create; }
+  use association _Booking { create; with draft; }
+
+  //Draft Actions
+  use action Activate;
+  use action Prepare;
+  use action edit;
+  use action Discard;
+  use action resume;
+
+
 }
 
 define behavior for ZATS_RP_BOOKING_PROCESSOR alias Booking
@@ -15,8 +24,8 @@ define behavior for ZATS_RP_BOOKING_PROCESSOR alias Booking
   use update;
   use delete;
 
-  use association _Travel;
-  use association _BookingSupp { create; }
+  use association _Travel { with draft; }
+  use association _BookingSupp { create; with draft; }
 }
 
 define behavior for ZATS_RP_BOOKSUPPL_PROCESSOR alias BookingSuppl
@@ -24,6 +33,6 @@ define behavior for ZATS_RP_BOOKSUPPL_PROCESSOR alias BookingSuppl
   use update;
   use delete;
 
-  use association _Travel;
-  use association _Booking;
+  use association _Travel { with draft; }
+  use association _Booking { with draft; }
 }

@@ -97,8 +97,61 @@ ENDCLASS.
 
 CLASS lhc_Travle IMPLEMENTATION.
 
+
   METHOD get_instance_authorizations.
+
+    DATA: ls_result LIKE LINE OF result.    "Result is table to return authorization checks result
+
+    "Step 1: Get the data of instance
+    READ ENTITIES OF zats_rp_travel IN LOCAL MODE
+                                    ENTITY Travle
+                                    FIELDS ( TravelId overallstatus )
+                                    WITH CORRESPONDING #( keys )
+                                    RESULT DATA(lt_travel)
+                                    FAILED DATA(ls_failed).
+
+    "Step 2: Loop data
+    LOOP AT lt_travel INTO DATA(ls_travel).
+
+      "Step 3: Check the status for the instance = Cancelled
+      IF ls_travel-overallstatus = 'X'.
+
+        DATA(lv_auth) = abap_false.
+
+        "Step 4: Check for authorization object
+        AUTHORITY-CHECK OBJECT 'CUSTOM_OBJ' ID 'FIELD_NAME' FIELD 'field1'.
+        IF sy-subrc = 0.
+          lv_auth = abap_true.
+        ENDIF.
+
+      ELSE.
+
+        lv_auth = abap_true.
+
+      ENDIF.
+
+      "Step 5: If the permission is denied then reject the Edit request
+      ls_result = VALUE #( TravelId = ls_travel-TravelId
+
+                           %update = COND #( WHEN lv_auth EQ abap_false
+                                             THEN if_abap_behv=>auth-unauthorized
+                                             ELSE if_abap_behv=>auth-allowed
+                                            )   "Condition for update Travel BO
+
+                           %action-copyTravel = COND #( WHEN lv_auth EQ abap_false
+                                             THEN if_abap_behv=>auth-unauthorized
+                                             ELSE if_abap_behv=>auth-allowed
+                                            )   "Condition for copy Travel BO
+
+      ).
+
+
+      APPEND ls_result TO result.
+
+    ENDLOOP.
+
   ENDMETHOD.
+
 
   METHOD get_global_authorizations.
   ENDMETHOD.
@@ -424,10 +477,11 @@ CLASS lhc_Travle IMPLEMENTATION.
 
   METHOD reCalculateTotalPrice."Resuable
 
-**Define a structure where we can store all the Booking Fees and Currency Code
+**Define a structure where we can store all the Boo king Fees and Currency Code
 
     TYPES: BEGIN OF ty_amount_per_currency,
-             amount        TYPE /dmo/price,
+*             amount        TYPE /dmo/price,
+             amount        TYPE zdmo_price,
              currency_code TYPE /dmo/currency_code,
            END OF ty_amount_per_currency.
 
