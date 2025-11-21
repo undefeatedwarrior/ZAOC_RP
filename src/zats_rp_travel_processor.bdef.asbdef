@@ -2,9 +2,10 @@ projection;
 strict ( 2 );
 use draft;
 define behavior for ZATS_RP_TRAVEL_PROCESSOR alias Travel
+implementation in class zbp_ats_rp_travel_proc unique
 {
-  use create;
-  use update;
+  use create ( augment, precheck );
+  use update ( precheck );
   use delete;
   use action copyTravel;
   use association _Booking { create; with draft; }

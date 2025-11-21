@@ -26,8 +26,8 @@ with additional save
 
 early numbering
 {
-  create ( authorization : global );
-  update;
+  create ( authorization : global , precheck );
+  update ( precheck );
   delete;
 
   //Dynamic Feature Control
@@ -58,6 +58,11 @@ early numbering
 
   //Data action to copy BO data
   factory action copyTravel [1]; //Data Action - Factory Data (Instance)
+
+  //Non factory action which will change the state of the BO instance
+  action (features : instance)acceptTravel result[1] $self;
+  action (features : instance)rejectTravel result[1] $self;
+
 
   determine action validationCustomer { validation validateHeaderData; }
   //Side Effect

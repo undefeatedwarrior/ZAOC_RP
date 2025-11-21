@@ -1,4 +1,6 @@
 CLASS zbp_ats_rp_booksuppl DEFINITION PUBLIC ABSTRACT FINAL FOR BEHAVIOR OF zats_rp_travel.
+protected section.
+private section.
 ENDCLASS.
 
 

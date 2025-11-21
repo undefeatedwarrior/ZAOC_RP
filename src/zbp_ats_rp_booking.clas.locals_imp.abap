@@ -64,6 +64,7 @@ CLASS lhc_booking IMPLEMENTATION.
 
           IF <mapped_bookingsuppl>-BookingSupplementId IS INITIAL.
             max_booking_suppl_id = max_booking_suppl_id + 1.
+            <mapped_bookingsuppl>-%is_draft = <bookingsuppl_wo_numbers>-%is_draft.  "For Draft Function
             <mapped_bookingsuppl>-BookingSupplementId = max_booking_suppl_id.
           ENDIF.
 
@@ -76,9 +77,9 @@ CLASS lhc_booking IMPLEMENTATION.
 
   METHOD calculateTotalPrice.   "TO-DO: Have to check - Not triggering on change of price at booking level
 
-    DATA: travel_ids TYPE STANDARD TABLE OF /DMO/I_Travel_M WITH UNIQUE HASHED KEY key COMPONENTS travel_id.
+    DATA: travel_ids TYPE STANDARD TABLE OF zats_rp_travel_processor WITH UNIQUE HASHED KEY key COMPONENTS travelid.
 
-    travel_ids = CORRESPONDING #( keys DISCARDING DUPLICATES MAPPING travel_id = TravelId ).
+    travel_ids = CORRESPONDING #( keys DISCARDING DUPLICATES MAPPING travelid = TravelId ).
 
     MODIFY ENTITIES OF zats_rp_travel IN LOCAL MODE ENTITY Travle
                                       EXECUTE reCalculateTotalPrice "using reusable method (Internal Action) reCalculateTotalPrice

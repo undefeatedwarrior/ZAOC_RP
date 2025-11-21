@@ -1,0 +1,33 @@
+projection;
+strict ( 2 );
+use draft;
+
+define behavior for ZATS_RP_TRAVEL_APPROVER alias Travel
+{
+//  use create;
+  use update;
+//  use delete;
+
+  field (readonly) TravelId, AgencyId, CustomerId, BeginDate, EndDate,
+                   TotalPrice, CurrencyCode, Description;
+
+  use action acceptTravel;
+  use action rejectTravel;
+
+
+  use action Prepare;
+  use action Edit;
+  use action Resume;
+  use action Activate;
+  use action Discard;
+
+  use association _Booking { with draft; }
+}
+
+define behavior for ZATS_RP_BOOKING_APPROVER alias Booking
+{
+//  use update;
+//  use delete;
+
+  use association _Travel { with draft; }
+}
