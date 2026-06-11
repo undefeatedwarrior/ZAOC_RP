@@ -13,7 +13,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_rp_ats_ve_calc IMPLEMENTATION.
+CLASS ZCL_RP_ATS_VE_CALC IMPLEMENTATION.
 
 
   METHOD if_sadl_exit_calc_element_read~calculate.

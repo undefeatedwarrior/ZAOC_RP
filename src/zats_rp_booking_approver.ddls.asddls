@@ -1,4 +1,4 @@
-@AccessControl.authorizationCheck: #NOT_REQUIRED
+    @AccessControl.authorizationCheck: #NOT_REQUIRED
 @EndUserText.label: 'Booking Approver Projection'
 //@Metadata.ignorePropagatedAnnotations: true
 @Metadata.allowExtensions: true

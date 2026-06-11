@@ -62,43 +62,57 @@ ENDCLASS.
 CLASS lhc_Travle DEFINITION INHERITING FROM cl_abap_behavior_handler.
   PRIVATE SECTION.
 
+    "For Instance Based Authorization
     METHODS get_instance_authorizations FOR INSTANCE AUTHORIZATION
       IMPORTING keys REQUEST requested_authorizations FOR Travle RESULT result.
 
+    "For Global Authorization - Apply for all BO Instances
     METHODS get_global_authorizations FOR GLOBAL AUTHORIZATION
       IMPORTING REQUEST requested_authorizations FOR Travle RESULT result.
 
+    "Data Action - Factory Dynamic(Instance based)
     METHODS copyTravel FOR MODIFY
       IMPORTING keys FOR ACTION Travle~copyTravel.
 
+    "Method For Dynamic Feature Control in RAP
     METHODS get_instance_features FOR INSTANCE FEATURES
       IMPORTING keys REQUEST requested_features FOR Travle RESULT result.
 
+    "Reusable method- which is used in determination
     METHODS recalculatetotalprice FOR MODIFY
       IMPORTING keys FOR ACTION travle~recalculatetotalprice.
 
+    "Determination
     METHODS calculatetotalprice FOR DETERMINE ON MODIFY
       IMPORTING keys FOR travle~calculatetotalprice.
 
+    "Validation Part
     METHODS validateheaderdata FOR VALIDATE ON SAVE
       IMPORTING keys FOR travle~validateheaderdata.
+
+    "Pre-check on create
     METHODS precheck_create FOR PRECHECK
       IMPORTING entities FOR CREATE travle.
 
+    "Pre-check on update
     METHODS precheck_update FOR PRECHECK
       IMPORTING entities FOR UPDATE travle.
+
+    "Accept Travel
     METHODS accepttravel FOR MODIFY
       IMPORTING keys FOR ACTION travle~accepttravel RESULT result.
 
+    "Reject Travel
     METHODS rejecttravel FOR MODIFY
       IMPORTING keys FOR ACTION travle~rejecttravel RESULT result.
 
-
+    "Early Numbering for Travel Root Entity
     METHODS earlynumbering_create FOR NUMBERING
-      IMPORTING entities FOR CREATE Travle.             "Early Numbering for Travel Root Entity
+      IMPORTING entities FOR CREATE Travle.
 
+    "Early Numbering for Booking (Immediate Child) Entity
     METHODS earlynumbering_cba_Booking FOR NUMBERING
-      IMPORTING entities FOR CREATE Travle\_Booking.    "Early Numbering for Booking (Child) Entity
+      IMPORTING entities FOR CREATE Travle\_Booking.
 
 
     TYPES: t_entity_create TYPE TABLE FOR CREATE zats_rp_travel,
@@ -793,81 +807,81 @@ CLASS lhc_Travle IMPLEMENTATION.
 
 
     " Step 1: Data Declaration
-    DATA: entities  TYPE t_entity_update,
-          operation TYPE if_abap_behv=>t_char01,
-          agencies  TYPE SORTED TABLE OF /dmo/agency WITH UNIQUE KEY agency_id,
-          customers TYPE SORTED TABLE OF /dmo/customer WITH UNIQUE KEY customer_id.
-
-
-    " Step 2: Check either Save or Update
-    ASSERT NOT ( entities_c IS INITIAL EQUIV entities_u IS INITIAL ).
-
-
-    " Step 3: Perform validation only if Agency or Customer changed
-    IF entities_c IS NOT INITIAL."create
-
-      entities = CORRESPONDING #( entities_c ).
-      operation = if_abap_behv=>op-m-create.
-
-    ELSE."update
-
-      entities = CORRESPONDING #( entities_u ).
-      operation = if_abap_behv=>op-m-update.
-
-    ENDIF.
-
-    DELETE entities WHERE %control-AgencyId = if_abap_behv=>mk-off
-                      AND %control-CustomerId = if_abap_behv=>mk-off.
-
-
-    " Step 4: Get all unique Agencies and Customers in a table
-    agencies = CORRESPONDING #( entities DISCARDING DUPLICATES MAPPING agency_id = AgencyId EXCEPT * ).
-    customers = CORRESPONDING #( entities DISCARDING DUPLICATES MAPPING customer_id = CustomerId EXCEPT * ).
-
-
-    " Step 5: Select the Agency Data and Customer Data from DB table
-    SELECT FROM /dmo/agency FIELDS agency_id, country_code
-                            FOR ALL ENTRIES IN @agencies
-                            WHERE agency_id = @agencies-agency_id
-                            INTO TABLE @DATA(agency_country_code).
-
-    SELECT FROM /dmo/customer FIELDS customer_id, country_code
-                        FOR ALL ENTRIES IN @customers
-                        WHERE customer_id = @customers-customer_id
-                        INTO TABLE @DATA(customer_country_code).
-
-
-    " Step 6: Loop at incoming entities and compare each Agency country and Customer country
-    LOOP AT entities INTO DATA(entity).
-
-      READ TABLE agency_country_code WITH KEY agency_id = entity-AgencyId
-                                     INTO DATA(ls_agency).
-
-      READ TABLE customer_country_code WITH KEY customer_id = entity-CustomerId
-                                       INTO DATA(ls_customer).
-
-
-      " Step 7: If country doesn't match, throw the error
-      IF ls_agency-country_code <> ls_customer-country_code.
-
-        APPEND VALUE #( %cid = COND #( WHEN operation = if_abap_behv=>op-m-create THEN entity-%cid_ref )
-                        %fail-cause = if_abap_behv=>cause-conflict
-                       ) TO failed.
-
-        APPEND VALUE #( %cid = COND #( WHEN operation = if_abap_behv=>op-m-create THEN entity-%cid_ref )
-                        %is_draft = entity-%is_draft
-                        %msg = NEW /dmo/cm_flight_messages(
-                                                              textid       = VALUE #( msgid = 'SY' msgno = 499 attr1 = 'The country codes for agency and customer not matching' )
-                                                              agency_id    = entity-AgencyId
-                                                              customer_id  = entity-CustomerId
-                                                              severity = if_abap_behv_message=>severity-error
-                                                           )
-                        %element-agencyid = if_abap_behv=>mk-on
-                       ) TO reported.
-
-      ENDIF.
-
-    ENDLOOP.
+*    DATA: entities  TYPE t_entity_update,
+*          operation TYPE if_abap_behv=>t_char01,
+*          agencies  TYPE SORTED TABLE OF /dmo/agency WITH UNIQUE KEY agency_id,
+*          customers TYPE SORTED TABLE OF /dmo/customer WITH UNIQUE KEY customer_id.
+*
+*
+*    " Step 2: Check either Save or Update
+*    ASSERT NOT ( entities_c IS INITIAL EQUIV entities_u IS INITIAL ).
+*
+*
+*    " Step 3: Perform validation only if Agency or Customer changed
+*    IF entities_c IS NOT INITIAL."create
+*
+*      entities = CORRESPONDING #( entities_c ).
+*      operation = if_abap_behv=>op-m-create.
+*
+*    ELSE."update
+*
+*      entities = CORRESPONDING #( entities_u ).
+*      operation = if_abap_behv=>op-m-update.
+*
+*    ENDIF.
+*
+*    DELETE entities WHERE %control-AgencyId = if_abap_behv=>mk-off
+*                      AND %control-CustomerId = if_abap_behv=>mk-off.
+*
+*
+*    " Step 4: Get all unique Agencies and Customers in a table
+*    agencies = CORRESPONDING #( entities DISCARDING DUPLICATES MAPPING agency_id = AgencyId EXCEPT * ).
+*    customers = CORRESPONDING #( entities DISCARDING DUPLICATES MAPPING customer_id = CustomerId EXCEPT * ).
+*
+*
+*    " Step 5: Select the Agency Data and Customer Data from DB table
+*    SELECT FROM /dmo/agency FIELDS agency_id, country_code
+*                            FOR ALL ENTRIES IN @agencies
+*                            WHERE agency_id = @agencies-agency_id
+*                            INTO TABLE @DATA(agency_country_code).
+*
+*    SELECT FROM /dmo/customer FIELDS customer_id, country_code
+*                        FOR ALL ENTRIES IN @customers
+*                        WHERE customer_id = @customers-customer_id
+*                        INTO TABLE @DATA(customer_country_code).
+*
+*
+*    " Step 6: Loop at incoming entities and compare each Agency country and Customer country
+*    LOOP AT entities INTO DATA(entity).
+*
+*      READ TABLE agency_country_code WITH KEY agency_id = entity-AgencyId
+*                                     INTO DATA(ls_agency).
+*
+*      READ TABLE customer_country_code WITH KEY customer_id = entity-CustomerId
+*                                       INTO DATA(ls_customer).
+*
+*
+*      " Step 7: If country doesn't match, throw the error
+*      IF ls_agency-country_code <> ls_customer-country_code.
+*
+*        APPEND VALUE #( %cid = COND #( WHEN operation = if_abap_behv=>op-m-create THEN entity-%cid_ref )
+*                        %fail-cause = if_abap_behv=>cause-conflict
+*                       ) TO failed.
+*
+*        APPEND VALUE #( %cid = COND #( WHEN operation = if_abap_behv=>op-m-create THEN entity-%cid_ref )
+*                        %is_draft = entity-%is_draft
+*                        %msg = NEW /dmo/cm_flight_messages(
+*                                                              textid       = VALUE #( msgid = 'SY' msgno = 499 attr1 = 'The country codes for agency and customer not matching' )
+*                                                              agency_id    = entity-AgencyId
+*                                                              customer_id  = entity-CustomerId
+*                                                              severity = if_abap_behv_message=>severity-error
+*                                                           )
+*                        %element-agencyid = if_abap_behv=>mk-on
+*                       ) TO reported.
+*
+*      ENDIF.
+*
+*    ENDLOOP.
 
 
   ENDMETHOD.

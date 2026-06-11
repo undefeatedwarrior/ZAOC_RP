@@ -1,0 +1,17 @@
+unmanaged implementation in class zbp_ats_rp_u_travel unique;
+strict ( 2 );
+
+define behavior for ZATS_RP_U_Travel alias Travel
+//late numbering
+lock master
+authorization master ( instance )
+//etag master <field_name>
+{
+
+  field ( readonly ) TravelId;
+  field ( mandatory ) AgencyId, CustomerId, BeginDate, EndDate;
+  create ( authorization : global );
+  update;
+  delete;
+
+}

@@ -1,4 +1,6 @@
 CLASS zbp_ats_rp_travel_proc DEFINITION PUBLIC ABSTRACT FINAL FOR BEHAVIOR OF zats_rp_travel_processor.
+protected section.
+private section.
 ENDCLASS.
 
 

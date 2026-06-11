@@ -2,8 +2,11 @@ CLASS lhc_booking DEFINITION INHERITING FROM cl_abap_behavior_handler.
 
   PRIVATE SECTION.
 
+    "Early Numbering for Booking Suppl (Immediate Child) Entity
     METHODS earlynumbering_cba_Bookingsupp FOR NUMBERING
       IMPORTING entities FOR CREATE Booking\_Bookingsupp.   "Early Numbering for Booking Suppl (Child) Entity
+
+    "Determination - Booking level price changes
     METHODS calculateTotalPrice FOR DETERMINE ON MODIFY
       IMPORTING keys FOR Booking~calculateTotalPrice.
 
