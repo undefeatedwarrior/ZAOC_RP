@@ -28,12 +28,13 @@ with additional save
 
 early numbering
 {
-  create ( authorization : global , precheck );
+  create ( authorization : global, precheck );
   update ( precheck );
   delete;
 
   //Dynamic Feature Control
   association _Booking { create ( features : instance ); with draft; }
+  association _Attachment { create; with draft; }
 
 
   //It is piece of code which is intented to be only consumed with in our RAP BO
@@ -62,8 +63,8 @@ early numbering
   factory action copyTravel [1]; //Data Action - Factory Data (Instance based - Dynamic)
 
   //Non factory action which will change the state of the BO instance
-  action (features : instance)acceptTravel result[1] $self;
-  action (features : instance)rejectTravel result[1] $self;
+  action ( features : instance ) acceptTravel result [1] $self;
+  action ( features : instance ) rejectTravel result [1] $self;
 
 
   determine action validationCustomer { validation validateHeaderData; }
@@ -191,5 +192,47 @@ early numbering
       Price               = price;
       CurrencyCode        = currency_code;
       LastChangedAt       = last_changed_at;
+    }
+}
+
+
+
+
+//Child for Travel
+define behavior for zats_rp_attachement alias Attachement
+
+// Make behavour pool for booking entity
+implementation in class zbp_ats_rp_attach unique
+
+persistent table zats_rp_attach
+lock dependent by _Travel
+authorization dependent by _Travel
+
+//Draft Table for Booking
+draft table zats_rp_d_attach
+
+etag master LastChangedAt
+{
+  update;
+  delete;
+
+  field ( numbering : managed ) id;
+  field ( readonly ) TravelId, Id;
+
+  association _Travel { with draft; }
+
+  mapping for zats_rp_attach
+    {
+      TravelId           = travel_id;
+      Id                 = Id;
+      Attachment         = attachment;
+      Filename           = filename;
+      Filetype           = filetype;
+      Memo               = memo;
+      LastChangedAt      = last_changed_at;
+      LocalCreatedAt     = local_created_at;
+      LocalCreatedBy     = local_created_by;
+      LocalLastChangedAt = local_last_changed_at;
+      LocalLastChangedBy = local_last_changed_by;
     }
 }

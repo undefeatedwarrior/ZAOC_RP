@@ -2,8 +2,10 @@
 @AccessControl.authorizationCheck: #NOT_REQUIRED
 @EndUserText.label: 'Root Travle BO for Unmanaged Scenario'
 @Metadata.ignorePropagatedAnnotations: false
+@Metadata.allowExtensions: true
+
 define root view entity ZATS_RP_U_Travel
-  as select from /dmo/travel
+  as select from /dmo/travel as Travel
   association [1] to ZATS_RP_U_AGENCY         as _Agency       on $projection.AgencyId = _Agency.AgencyId
   association [1] to ZATS_RP_U_CUSTOMER       as _Customer     on $projection.CustomerId = _Customer.CustomerId
   association [1] to I_Currency               as _Currency     on $projection.CurrencyCode = _Currency.Currency

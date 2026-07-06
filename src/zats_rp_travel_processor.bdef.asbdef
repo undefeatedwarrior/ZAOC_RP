@@ -9,6 +9,7 @@ implementation in class zbp_ats_rp_travel_proc unique
   use delete;
   use action copyTravel;
   use association _Booking { create; with draft; }
+  use association _Attachment { create; with draft; }
 
   //Draft Actions
   use action Activate;
@@ -29,6 +30,8 @@ define behavior for ZATS_RP_BOOKING_PROCESSOR alias Booking
   use association _BookingSupp { create; with draft; }
 }
 
+
+
 define behavior for ZATS_RP_BOOKSUPPL_PROCESSOR alias BookingSuppl
 {
   use update;
@@ -36,4 +39,14 @@ define behavior for ZATS_RP_BOOKSUPPL_PROCESSOR alias BookingSuppl
 
   use association _Travel { with draft; }
   use association _Booking { with draft; }
+}
+
+
+
+define behavior for ZATS_RP_ATTACH_PROCESSOR alias Attachement
+{
+  use update;
+  use delete;
+
+  use association _Travel { with draft; }
 }

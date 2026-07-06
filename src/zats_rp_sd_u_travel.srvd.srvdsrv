@@ -1,0 +1,9 @@
+@EndUserText.label: 'Service Defination for Un-managed Travel'
+define service ZATS_RP_SD_U_TRAVEL {
+  expose ZATS_RP_U_Travel        as Travel;
+  expose ZATS_RP_U_CUSTOMER      as Customer;
+  expose ZATS_RP_U_AGENCY        as Agency;
+  expose I_Country               as Country;
+  expose I_Currency              as Currency;
+  expose /DMO/I_Travel_Status_VH as Status;
+}

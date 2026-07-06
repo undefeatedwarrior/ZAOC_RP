@@ -3,6 +3,7 @@ define service ZATS_RP_SD_V2_PROCESSOR {
   expose ZATS_RP_TRAVEL_PROCESSOR    as Travel;
   expose ZATS_RP_BOOKING_PROCESSOR   as Booking;
   expose ZATS_RP_BOOKSUPPL_PROCESSOR as BookSupplement;
+  expose ZATS_RP_ATTACH_PROCESSOR    as Attachment;
   expose /DMO/I_Agency               as Agency;
   expose /DMO/I_Customer             as Customer;
   expose /DMO/I_Carrier              as Carrier;

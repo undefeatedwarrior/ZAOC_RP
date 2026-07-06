@@ -3,11 +3,11 @@
     typeName: 'Travel',
     typeNamePlural: 'Travels',
     title: { value: 'TravelId' },
-    description: { value: '_Customer.FirstName'},
+    description: { value: 'CustomerName'},
     typeImageUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ6ZYUaKnXuRQuF5r06axflMPVT7VQB_V9NHA&s'
     }
 
-annotate entity ZATS_RP_TRAVEL_PROCESSOR with
+annotate entity ZATS_RP_U_Travel with
 {
 
   // Object Page Annotation
@@ -67,38 +67,7 @@ annotate entity ZATS_RP_TRAVEL_PROCESSOR with
                         parentId: 'super',
                         targetQualifier: 'dates'
 
-                     },
-                     {
-
-                        purpose: #STANDARD,
-                        type: #FIELDGROUP_REFERENCE, // Child ( Multiple Fild Groups are allowed )
-                        label: 'Admin Info.',
-                        position: 40,
-                        parentId: 'super',
-                        targetQualifier: 'admin'
-
-                     },
-                 {
-
-                    purpose: #STANDARD,
-                    type: #LINEITEM_REFERENCE, //Parent
-                    position: 20,
-                    id : 'booking',
-                    label: 'Bookings',
-                    targetElement: '_Booking'
-
-                 },
-
-                 {
-
-                    purpose: #STANDARD,
-                    type: #LINEITEM_REFERENCE, //Parent
-                    position: 30,
-                    id : 'Attachements',
-                    label: 'Attachements',
-                    targetElement: '_Attachment'
-
-                 }                 
+                     }
 
 
               ] // End of @UI.facet
@@ -107,14 +76,14 @@ annotate entity ZATS_RP_TRAVEL_PROCESSOR with
   @UI.lineItem: [{ position: 10 },
                  { type: #FOR_ACTION,
                    //inline: true ,         //It will dispaly Copy Travel Button for each BO instance
-                   label: 'Copy Travel',
-                   dataAction: 'copyTravel' } //Annotation for Copy Travel Option -- Data Action
+                   label: 'Set Status',
+                   dataAction: 'set_booked_status' } //Annotation for Copy Travel Option -- Data Action
   ]  // LR table
   // Object Page Annotation
   @UI.identification: [{ position: 10 } ,
                        { type: #FOR_ACTION,
-                         label: 'Copy Travel',
-                         dataAction: 'copyTravel' } //Annotation for Copy Travel Option -- Data Action
+                         label: 'Set Status',
+                         dataAction: 'set_booked_status' } //Annotation for Copy Travel Option -- Data Action
                    ]
   TravelId;
 
@@ -153,14 +122,15 @@ annotate entity ZATS_RP_TRAVEL_PROCESSOR with
   CurrencyCode;
   //  Description;
 
+  @UI.identification: [{ position: 40 }]
+  Memo;  
+
   @UI.selectionField: [{ position: 50 }]    // LR Selection
   @UI.lineItem: [{ position: 70 ,
-                   criticality: 'Criticality' ,
                    importance: #HIGH }] // LR table
   // Object Page Annotation
-  @UI.dataPoint:{ title: 'Travel Status' ,
-                  qualifier: 'Status' ,
-                  criticality: 'Criticality'
+  @UI.dataPoint:{ title: 'Status' ,
+                  qualifier: 'Status'
                 }
   @UI.fieldGroup: [{ qualifier: 'dates' , label: 'Status' , position: 30 }]
   overallstatus;
@@ -168,26 +138,26 @@ annotate entity ZATS_RP_TRAVEL_PROCESSOR with
   //Virtual Element Field
   @UI.lineItem: [{ position: 80 , importance: #HIGH }]
   @EndUserText.label: 'CO2Tax'
-  CO2Tax;
+  co2tax;
 
   //Virtual Element Field
   @UI.lineItem: [{ position: 90 , importance: #HIGH }]
   @EndUserText.label: 'Day of Flight'
-  dayOfTheFlight;
+  dayoftheflight;
 
 
   //  StatusText;
   //  Criticality;
 
   @UI.fieldGroup: [{ qualifier: 'admin' , label: 'Created By' , position: 10 }]
-  CreatedBy;
+  Createdby;
 
   @UI.fieldGroup: [{ qualifier: 'admin' , label: 'Created On' , position: 20 }]
-  CreatedAt;
+  Createdat;
 
   @UI.fieldGroup: [{ qualifier: 'admin' , label: 'Changed By' , position: 30 }]
-  LastChangedBy;
+  Lastchangedby;
 
   @UI.fieldGroup: [{ qualifier: 'admin' , label: 'Changed On' , position: 40 }]
-  LastChangedAt;
+  Lastchangedat;
 }
